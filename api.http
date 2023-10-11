@@ -1,0 +1,37 @@
+### Recuperar todas las peliculas
+GET http://localhost:3000/movies
+
+### Recuperar una pelicula
+GET http://localhost:3000/movies/064d39c0-ac7e-4389-888f-19d276597baa
+
+### Recuperar todas las peliculas de un genero
+GET http://localhost:3000/movies?genre=Action
+
+### Crear una pelicula
+POST http://localhost:3000/movies
+Content-Type: application/json
+
+{
+  "title": "Animals",
+  "year": 2021,
+  "director": "Philippa Lowthorpe",
+  "duration": 113,
+  "poster": "https://ukmums.tv/wp-content/uploads/2019/05/Main-Image-2.jpg",
+  "genre": ["Action", "Adventure", "Fantasy"],
+  "rate": 8.0
+}
+
+### Actualizar una pelicula
+PATCH http://localhost:3000/movies/064d39c0-ac7e-4389-888f-19d276597baa
+Content-Type: application/json
+
+{
+  "title": "Hola",
+  "year": 2021,
+  "director": "Philippa Lowthorpe",
+  "duration": 113,
+  "poster": "https://ukmums.tv/wp-content/uploads/2019/05/Main-Image-2.jpg",
+  "genre": ["Action", "Adventure", "Fantasy"],
+  "rate": 9.0
+}
+
