@@ -1,6 +1,6 @@
 import express, { json } from "express";
-import { moviesRouter } from "./routes/movies.routes";
-import { corsMiddleware } from "./middlewares/cors";
+import { moviesRouter } from "./routes/movies.routes.js";
+import { corsMiddleware } from "./middlewares/cors.js";
 
 const PORT = process.env.PORT || 3000;
 const app = express();
