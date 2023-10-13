@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,8 +21,8 @@
   <script type="module">
     fetch('http://localhost:3000/movies')
       .then(res => res.json())
-      .then(movies => {
-        const html = movies.map(movie => {
+      .then(data => {
+        const html = data.movies.map(movie => {
           return `
             <article data-id="${movie.id}">
               <h2>${movie.title}</h2>
