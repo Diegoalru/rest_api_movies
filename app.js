@@ -9,7 +9,7 @@ app.disable("x-powered-by");
 app.use(json());
 app.use(corsMiddleware());
 
-app.use("/movies", moviesRouter)
+app.use("/movies", moviesRouter);
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
