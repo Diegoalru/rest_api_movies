@@ -2,10 +2,10 @@
 GET http://localhost:3000/movies
 
 ### Recuperar una pelicula
-GET http://localhost:3000/movies/064d39c0-ac7e-4389-888f-19d276597baa
+GET http://localhost:3000/movies/04986507-b3ed-442c-8ae7-4c5df804f896
 
 ### Recuperar todas las peliculas de un genero
-GET http://localhost:3000/movies?genre=Action
+GET http://localhost:3000/movies?genre=man
 
 ### Crear una pelicula
 POST http://localhost:3000/movies
@@ -22,11 +22,11 @@ Content-Type: application/json
 }
 
 ### Actualizar una pelicula
-PATCH http://localhost:3000/movies/064d39c0-ac7e-4389-888f-19d276597baa
+PATCH http://localhost:3000/movies/0f87cccd-6bbe-11ee-a8d8-047d7bdd9ef8
 Content-Type: application/json
 
 {
-  "title": "Hola",
+  "title": "Animals 2",
   "year": 2021,
   "director": "Philippa Lowthorpe",
   "duration": 113,
@@ -35,3 +35,5 @@ Content-Type: application/json
   "rate": 9.0
 }
 
+### Eliminar una pelicula
+DELETE http://localhost:3000/movies/0f87cccd-6bbe-11ee-a8d8-047d7bdd9ef8
