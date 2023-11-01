@@ -1,4 +1,4 @@
-import { MovieModel } from "../models/mongodb/movie.js";
+import { MovieModel } from "../models/mysql/movie.js";
 import { validateMovie, validatePartialMovie } from "../schemas/movie.js";
 
 export class MovieController {
@@ -31,6 +31,12 @@ export class MovieController {
       });
     }
     const newMovie = await MovieModel.create({ movie: movie.data });
+
+    if (!newMovie) {
+      return res.status(409).json({
+        message: "Error while creating movie",
+      });
+    }
 
     res.status(201).json({ message: "Movie created", movie: newMovie });
   }
