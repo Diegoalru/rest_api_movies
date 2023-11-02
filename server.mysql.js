@@ -1,5 +1,5 @@
-import { createApp } from "./app.js";
+import { createApp } from "./src/app.js";
 
-import { MovieModel } from "./models/mysql/movie.js";
+import { MovieModel } from "./src/models/mysql/movie.js";
 
 createApp({ movieModel: MovieModel });

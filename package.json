@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch app.js",
+    "dev": "node --watch src/app.js",
     "start:mysql": "node --watch server.mysql.js",
     "start:mongo": "node --watch server.mongo.js",
     "start:mariadb": "node --watch server.mariadb.js"
