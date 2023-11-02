@@ -1,7 +1,8 @@
 import mysql from "mysql2/promise";
+import "dotenv/config";
 
 // Credenciales de prueba.
-const config = {
+const DEFAULT_CONFIG = {
   host: "localhost",
   port: "3306",
   user: "moviesdb",
@@ -9,7 +10,9 @@ const config = {
   database: "moviesdb",
 };
 
-const connection = await mysql.createConnection(config);
+const connectionString = process.env.DATABASE_URL || DEFAULT_CONFIG;
+
+const connection = await mysql.createConnection(connectionString);
 
 const SELECT_MOVIES_QUERY = `
 SELECT
@@ -65,13 +68,14 @@ export class MovieModel {
         [movies] = await connection.query(SELECT_MOVIES_QUERY, [`%${genre}%`]);
       else 
         [movies] = await connection.query("SELECT * FROM movies;");
-      
+
       // Obtener los generos de las peliculas
-      [movies] = await this.getGenresOfMovies(movies)
+      [movies] = await this.getGenresOfMovies(movies);
 
       return mapMovieResults(movies);
     } catch (error) {
       console.error(error);
+      return [];
     }
   }
 
@@ -83,10 +87,12 @@ export class MovieModel {
   static async getGenresOfMovies(movies) {
     try {
       for (let movie of movies) {
-        const [genres] = await connection.query(SELECT_MOVIES_GENRES_QUERY, [movie.id]);
-        movie.genres = genres.map(genre => genre.name)
+        const [genres] = await connection.query(SELECT_MOVIES_GENRES_QUERY, [
+          movie.id,
+        ]);
+        movie.genres = genres.map((genre) => genre.name);
       }
-      return [movies]      
+      return [movies];
     } catch (error) {
       console.error(error);
       return [];
@@ -109,7 +115,7 @@ export class MovieModel {
         return null;
       }
 
-      [movie] = await this.getGenresOfMovies(movie)
+      [movie] = await this.getGenresOfMovies(movie);
 
       return mapMovieResults(movie)[0];
     } catch (error) {
