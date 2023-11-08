@@ -3,14 +3,14 @@ import "dotenv/config";
 
 // Credenciales de prueba.
 const DEFAULT_CONFIG = {
-  host: "localhost",
-  port: "3306",
-  user: "moviesdb",
-  password: "moviesdb",
-  database: "moviesdb",
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
 };
 
-const connectionString = process.env.DATABASE_URL || DEFAULT_CONFIG;
+const connectionString = DEFAULT_CONFIG;
 
 const connection = await mysql.createConnection(connectionString);
 
