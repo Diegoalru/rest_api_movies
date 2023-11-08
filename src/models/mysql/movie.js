@@ -3,76 +3,87 @@ import "dotenv/config";
 
 // Credenciales de prueba.
 const DEFAULT_CONFIG = {
-  host: "localhost",
-  port: "3306",
-  user: "moviesdb",
-  password: "moviesdb",
-  database: "moviesdb",
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE
 };
 
 const connectionString = process.env.DATABASE_URL || DEFAULT_CONFIG;
 
 const connection = await mysql.createConnection(connectionString);
 
+const SELECT_ALL_MOVIES_QUERY = `
+    SELECT BIN_TO_UUID(M.id) AS id,
+           M.title,
+           M.\`year\`,
+           M.director,
+           M.duration,
+           M.poster,
+           M.rate
+    FROM movies AS M
+`;
+
 const SELECT_MOVIES_QUERY = `
-SELECT
-  M.id,
-  M.title,
-  M.\`year\`,
-  M.director,
-  M.duration,
-  M.poster,
-  M.rate
-FROM
-  movies AS M
-  INNER JOIN movie_genres AS MG ON
-    M.id = MG.movie_id
-  INNER JOIN genres AS G ON
-    MG.genre_id = G.id
-WHERE G.name like ?;
+    SELECT BIN_TO_UUID(M.id) AS id,
+           M.title,
+           M.\`year\`,
+           M.director,
+           M.duration,
+           M.poster,
+           M.rate
+    FROM movies AS M
+             INNER JOIN movie_genres AS MG ON
+        M.id = MG.movie_id
+             INNER JOIN genres AS G ON
+        MG.genre_id = G.id
+    WHERE G.name like ?;
+`;
+
+const SELECT_MOVIE_BY_ID_QUERY = `
+    SELECT BIN_TO_UUID(id) AS id,
+           title,
+           \`year\`,
+           director,
+           duration,
+           poster,
+           rate
+    FROM movies
+    WHERE id = UUID_TO_BIN(?);
 `;
 
 const SELECT_MOVIES_GENRES_QUERY = `
-  SELECT g.name 
-  FROM movie_genres mg 
-	  INNER JOIN movies m 
-	  ON mg.movie_id = m.id 
-	  INNER JOIN genres g 
-	  ON mg.genre_id = g.id
-  WHERE m.id = ?;
+    SELECT g.name
+    FROM movie_genres mg
+             INNER JOIN movies m
+                        ON mg.movie_id = m.id
+             INNER JOIN genres g
+                        ON mg.genre_id = g.id
+    WHERE m.id = UUID_TO_BIN(?);
 `;
 
-/**
- * Map movie results to a more friendly format.
- * @param {Array} movies - The movies to map.
- * @returns {Array} - The mapped movies.
- */
-function mapMovieResults(movies) {
-  return movies.map((item) => ({
-    ...item,
-    id: item.id.toString("utf8"),
-  }));
-}
 
+/**
+ * Movie model using MySQL.
+ */
 export class MovieModel {
   /**
    * Get all movies from the database.
    * @param {string} genre - The genre to filter by.
    * @returns {Promise<Array>} - An array of movies.
    */
-  static async getAll({ genre }) {
+  static async getAll({genre}) {
     try {
       let movies;
 
-      if (genre)
-        [movies] = await connection.query(SELECT_MOVIES_QUERY, [`%${genre}%`]);
-      else 
-        [movies] = await connection.query("SELECT * FROM movies;");
+      if (genre) [movies] = await connection.query(SELECT_MOVIES_QUERY, [`%${genre}%`]);
+      else [movies] = await connection.query(SELECT_ALL_MOVIES_QUERY);
 
       // Obtener los generos de las peliculas
       [movies] = await this.getGenresOfMovies(movies);
 
-      return mapMovieResults(movies);
+      return movies;
     } catch (error) {
       console.error(error);
       return [];
@@ -104,12 +115,9 @@ export class MovieModel {
    * @param {string} id - The ID of the movie to get.
    * @returns {Promise<Object>} - The movie object.
    */
-  static async getById({ id }) {
+  static async getById({id}) {
     try {
-      let [movie] = await connection.query(
-        "SELECT * FROM movies WHERE id = ?;",
-        [id]
-      );
+      let [movie] = await connection.query(SELECT_MOVIE_BY_ID_QUERY, [id]);
 
       if (movie.length === 0) {
         return null;
@@ -117,7 +125,7 @@ export class MovieModel {
 
       [movie] = await this.getGenresOfMovies(movie);
 
-      return mapMovieResults(movie)[0];
+      return movie[0];
     } catch (error) {
       console.error(error);
       return [];
@@ -129,7 +137,7 @@ export class MovieModel {
    * @param {Object} movie - The movie object to create.
    * @returns {Promise<Object>} - The created movie object.
    */
-  static async create({ movie }) {
+  static async create({movie}) {
     try {
       const [result] = await connection.query(
         "INSERT INTO movies (title, year, director, duration, poster, rate) VALUES (?, ?, ?, ?, ?, ?);",
@@ -147,21 +155,19 @@ export class MovieModel {
         return null;
       }
 
-      const [movies] = await connection.query(
+      const [movie] = await connection.query(
         "SELECT * FROM movies WHERE id = ?;",
         [result.insertId]
       );
 
       // TODO: Crear los registros en las tablas movie_genres y genres
 
-      return mapMovieResults(movies)[0];
+      return movie[0];
     } catch (error) {
       console.error(error);
       return null;
     }
   }
-
-  // Crea un registro en la tabla movie_genres
 
   /**
    * Update a movie by ID.
@@ -169,10 +175,10 @@ export class MovieModel {
    * @param {Object} movie - The movie object to update.
    * @returns {Promise<Object>} - The updated movie object.
    */
-  static async update({ id, movie }) {
+  static async update({id, movie}) {
     try {
       const [result] = await connection.query(
-        "UPDATE movies SET title = ?, year = ?, director = ?, duration = ?, poster = ?, rate = ? WHERE id = ?;",
+        "UPDATE movies SET title = ?, year = ?, director = ?, duration = ?, poster = ?, rate = ? WHERE id = UUID_TO_BIN(?);",
         [
           movie.title,
           movie.year,
@@ -189,11 +195,11 @@ export class MovieModel {
       }
 
       const [movies] = await connection.query(
-        "SELECT * FROM movies WHERE id = ?;",
+        "SELECT * FROM movies WHERE id = UUID_TO_BIN(?);",
         [id]
       );
 
-      return mapMovieResults(movies)[0];
+      return movies[0];
     } catch (error) {
       console.error(error);
       return null;
@@ -205,10 +211,10 @@ export class MovieModel {
    * @param {string} id - The ID of the movie to delete.
    * @returns {Promise<Object>} - The deleted movie object.
    */
-  static async delete({ id }) {
+  static async delete({id}) {
     try {
       const [movies] = await connection.query(
-        "SELECT * FROM movies WHERE id = ?;",
+        "SELECT * FROM movies WHERE id = UUID_TO_BIN(?);",
         [id]
       );
 
@@ -217,7 +223,7 @@ export class MovieModel {
       }
 
       const [result] = await connection.query(
-        "DELETE FROM movies WHERE id = ?;",
+        "DELETE FROM movies WHERE id = UUID_TO_BIN(?);",
         [id]
       );
 
@@ -225,7 +231,7 @@ export class MovieModel {
         return null;
       }
 
-      return mapMovieResults(movies)[0];
+      return movies[0];
     } catch (error) {
       console.error(error);
       return null;
