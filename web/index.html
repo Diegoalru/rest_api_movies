@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,41 +19,95 @@
     }
   </style>
   <script type="module">
-    fetch('http://localhost:3000/movies')
-      .then(res => res.json())
-      .then(movies => {
-        const html = movies.map(movie => {
-          return `
-            <article data-id="${movie.id}">
-              <h2>${movie.title}</h2>
-              <img src="${movie.poster}" alt="${movie.title}">
-              <p>${movie.year}</p>
-              <button>Eliminar</button>
-            </article>
-          `}).join('')
 
-        document.querySelector('main').innerHTML = html
-
-        document.addEventListener('click', e => {
-          if (e.target.matches('button')) {
-            const article = e.target.closest('article')
-            const id = article.dataset.id
-
-            fetch(`http://localhost:3000/movies/${id}`, {
-              method: 'DELETE'
-            })
-              .then(res => {
-                if (res.ok) {
-                  article.remove()
-                }
-              })
-          }
+    const url = 'http://localhost:3000/movies';
+    function loadMoviesByGenre(genre) {
+      fetch(`${url}?genre=${genre}`)
+        .then(res => res.json())
+        .then(data => {
+          document.querySelector('main').innerHTML = data.movies.map(movie => {
+            return `
+              <article data-id="${movie.id}">
+                <h2>${movie.title}</h2>
+                <img src="${movie.poster}" alt="${movie.title}">
+                <p>${movie.year}</p>
+                <button class="delete-btn">Eliminar</button>
+              </article>
+            `
+          }).join('');
         })
-      })
+        .catch(error => {
+          console.error('Hubo un problema con la petición Fetch:', error);
+          const errorMessage = document.createElement('p');
+          errorMessage.textContent = 'Error: No se pudo conectar con el servidor';
+          document.querySelector('main').appendChild(errorMessage);
+        });
+    }
+
+    function loadAllMovies() {
+        fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          document.querySelector('main').innerHTML = data.movies.map(movie => {
+            return `
+              <article data-id="${movie.id}">
+                <h2>${movie.title}</h2>
+                <img src="${movie.poster}" alt="${movie.title}">
+                <p>${movie.year}</p>
+                <button class="delete-btn">Eliminar</button>
+              </article>
+            `
+          }).join('');
+        })
+        .catch(error => {
+          console.error('Hubo un problema con la petición Fetch:', error);
+          const errorMessage = document.createElement('p');
+          errorMessage.textContent = 'Error: No se pudo conectar con el servidor';
+          document.querySelector('main').appendChild(errorMessage);
+        });
+    }
+
+    loadAllMovies();
+
+    document.addEventListener('submit', e => {
+      e.preventDefault();
+      if (e.target.matches('form')) {
+        const genre = document.getElementById('genre').value;
+        loadMoviesByGenre(genre);
+      }
+    });
+
+    // Eliminar película
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('delete-btn')) {
+        const article = e.target.closest('article');
+        const id = article.dataset.id;
+
+      fetch(`${url}/${id}`, {
+          method: 'DELETE'
+        })
+          .then(res => {
+            if (res.ok) {
+              article.remove();
+            }
+          })
+          .catch(error => {
+            console.error('Hubo un problema con la petición Fetch:', error);
+            const errorMessage = document.createElement('p');
+            errorMessage.textContent = 'Error: No se pudo conectar con el servidor';
+            document.querySelector('main').appendChild(errorMessage);
+          });
+      }
+    });
   </script>
 </head>
 
 <body>
+  <form>
+    <label for="genre">Género</label>
+    <input type="text" name="genre" id="genre">
+    <button type="submit">Buscar</button>
+  </form>
   <main></main>
 </body>
 
